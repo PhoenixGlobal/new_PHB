@@ -1,7 +1,3 @@
-/**
- *Submitted for verification at BscScan.com on 2021-09-28
-*/
-
 pragma solidity 0.6.8;
 
 interface iBEP20 {
@@ -620,9 +616,9 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     require(balanceAfter-balanceBefore <= amount.div(100).mul(10000000000) , "BEP20: after convert,the balance increase error");
   }
   
-  /** @dev inflation PHB tokens with _inflationRate. 
+  /** @dev Inflation PHB tokens with _inflationRate. 
    */
-  function inflation() external onlyOwner{
+  function inflation() external{
     uint256 nowTime = now;  
     require(nowTime > _lastInflationTime , "BEP20: now time is before last inflation time");
     
@@ -631,7 +627,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     uint256 day_inflation = _totalSupply.mul(_inflationRate).div(100).div(365);
     uint256 n_day_inflation =  day_inflation.mul(n);
     
-    mint(n_day_inflation);
+    _mint(owner(), n_day_inflation);
     _lastInflationTime = _lastInflationTime.add(n * 86400);
   }
   
@@ -713,43 +709,47 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     emit Approval(owner, spender, amount);
   }
   
-  
+   /**
+   * @dev Emitted when `value` tokens are moved from one account (`from`) to
+   * another (`to`) with additional data(`data`).
+   */
   event Transfer(address indexed from, address indexed to, uint value, bytes data);
 
   /**
-  * @dev transfer token to a contract address with additional data if the recipient is a contact.
-  * @param _to The address to transfer to.
-  * @param _value The amount to be transferred.
-  * @param _data The extra data to be passed to the receiving contract.
+  * @dev transfer token to a contract address with additional data if the recipient is a contract.
+  * @param to The address to transfer to.
+  * @param value The amount to be transferred.
+  * @param data The extra data to be passed to the receiving contract.
   */
-  function transferAndCall(address _to, uint _value, bytes calldata _data)
+  function transferAndCall(address to, uint value, bytes calldata data)
     external
     returns (bool)
   {
-    transfer(_to, _value);
-    Transfer(msg.sender, _to, _value, _data);
-    if (isContract(_to)) {
-      contractFallback(_to, _value, _data);
+    transfer(to, value);
+    emit Transfer(_msgSender(), to, value, data);
+    if (_isContract(to)) {
+      _contractFallback(to, value, data);
     }
     return true;
   }
 
-  // PRIVATE
-
-  function contractFallback(address _to, uint _value, bytes memory _data)
+  /**
+  * @dev Call the onTokenTransfer function of contract(`to`).
+  */
+  function _contractFallback(address to, uint value, bytes memory data)
     internal
   {
-    ERC677Receiver receiver = ERC677Receiver(_to);
-    receiver.onTokenTransfer(msg.sender, _value, _data);
+    ERC677Receiver receiver = ERC677Receiver(to);
+    receiver.onTokenTransfer(_msgSender(), value, data);
   }
   /** 
-  * @dev Judge `_addr` is constract address or not. 
+  * @dev Judge `addr` is constract address or not. 
   */
-  function isContract(address _addr)
+  function _isContract(address addr)
     internal view returns (bool)
   {
     uint length;
-    assembly { length := extcodesize(_addr) }
+    assembly { length := extcodesize(addr) }
     return length > 0;
   }
 }
