@@ -347,7 +347,6 @@ contract Ownable is Context {
   }
 }
 
-
 interface ERC677Receiver {
   function onTokenTransfer(address _sender, uint _value, bytes calldata _data) external;
 }
@@ -367,6 +366,8 @@ contract BEP20PHB is Context, iBEP20, Ownable {
   string public _symbol;
   string public _name;
   
+  address public _inflationAddress;
+  
   PHBOld private _oldPHB1;
   PHBOld private _oldPHB2;
 
@@ -380,6 +381,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     _inflationRate=10;
     _oldPHB1 = PHBOld(0xF09f5E21F86692C614D2D7B47E3b9729DC1C436F);
     _oldPHB2 = PHBOld(0x778aff493eC182e948f462FA45396Dfa7d9AF7c3);
+    _inflationAddress=owner();
 
     emit Transfer(address(0), msg.sender, _totalSupply);
   }
@@ -627,7 +629,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     uint256 day_inflation = _totalSupply.mul(_inflationRate).div(100).div(365);
     uint256 n_day_inflation =  day_inflation.mul(n);
     
-    _mint(owner(), n_day_inflation);
+    _mint(_inflationAddress, n_day_inflation);
     _lastInflationTime = _lastInflationTime.add(n * 86400);
   }
   
@@ -649,7 +651,27 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     return _inflationRate;
   }
   
-
+  /** @dev Set `inflationAddress` to _inflationAddress. 
+   */
+  function setInflationAddress(address inflationAddress) external onlyOwner{
+    require(inflationAddress != address(0), "BEP20: new inflationAddress is the zero address");
+    _inflationAddress=inflationAddress;
+  }
+  
+  /**
+   * @dev Get _inflationAddress. 
+   */
+  function inflationAddress() external view returns (address) {
+    return _inflationAddress;
+  }
+  
+   /**
+   * @dev Get _lastInflationTime. 
+   */
+  function lastInflationTime() external view returns (uint256) {
+    return _lastInflationTime;
+  }
+  
   /** @dev Creates `amount` tokens and assigns them to `account`, increasing
    * the total supply.
    *
