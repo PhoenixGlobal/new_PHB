@@ -366,12 +366,14 @@ contract BEP20PHB is Context, iBEP20, Ownable {
   string public _symbol;
   string public _name;
   
-  address public _inflationAddress;
+  address private _inflationAddress;
+  address private _oldPHBAddress;
+  address private _oldPHXAddress;
   
-  PHBOld private _oldPHB1;
-  PHBOld private _oldPHB2;
+  PHBOld private _oldPHB;
+  PHBOld private _oldPHX;
 
-  constructor() public {
+  constructor(address oldPHB,address oldPHX) public {
     _name = 'Phoenix Global';
     _symbol = 'PHB';
     _decimals = 18;
@@ -379,8 +381,10 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     _balances[msg.sender] = _totalSupply;
     _lastInflationTime=now;
     _inflationRate=10;
-    _oldPHB1 = PHBOld(0xF09f5E21F86692C614D2D7B47E3b9729DC1C436F);
-    _oldPHB2 = PHBOld(0x778aff493eC182e948f462FA45396Dfa7d9AF7c3);
+    _oldPHB = PHBOld(oldPHB);
+    _oldPHBAddress = oldPHB;
+    _oldPHX = PHBOld(oldPHX);
+    _oldPHXAddress = oldPHX;
     _inflationAddress=owner();
 
     emit Transfer(address(0), msg.sender, _totalSupply);
@@ -581,38 +585,38 @@ contract BEP20PHB is Context, iBEP20, Ownable {
   }
   
   /** 
-   * @dev Convert `amount` old PHB1 tokens to new PHB tokens by 1% rate. 
+   * @dev Convert `amount` old PHB tokens to new PHB tokens by 1% rate. 
    *
    * Requirements
    *
    * - `amount` must be more than zero and no more than balance.
    */
-  function convert1(uint256 amount) external{
+  function convertPHB(uint256 amount) external{
     require(amount > 0 , "BEP20: convert amount not more than zero");
-    uint256 balance = _oldPHB1.balanceOf(_msgSender());
+    uint256 balance = _oldPHB.balanceOf(_msgSender());
     require(balance >= amount , "BEP20: convert amount more than balance");
     
     uint256 balanceBefore = _balances[_msgSender()];
-    _oldPHB1.burnFrom(_msgSender(), amount);
+    _oldPHB.burnFrom(_msgSender(), amount);
     _mint(_msgSender(), amount.div(100));
     uint256 balanceAfter = _balances[_msgSender()];
     require(balanceAfter-balanceBefore <= amount.div(100) , "BEP20: after convert,the balance increase error");
   }
   
   /** 
-   * @dev Convert `amount` old PHB2 tokens to new PHB tokens by 1% rate. 
+   * @dev Convert `amount` old PHX tokens to new PHB tokens by 1% rate. 
    *
    * Requirements
    *
    * - `amount` must be more than zero and no more than balance.
    */
-  function convert2(uint256 amount) external{
+  function convertPHX(uint256 amount) external{
     require(amount > 0 , "BEP20: convert amount not more than zero");
-    uint256 balance = _oldPHB2.balanceOf(_msgSender());
+    uint256 balance = _oldPHX.balanceOf(_msgSender());
     require(balance >= amount , "BEP20: convert amount more than balance");
     
     uint256 balanceBefore = _balances[_msgSender()];
-    _oldPHB2.burnFrom(_msgSender(), amount);
+    _oldPHX.burnFrom(_msgSender(), amount);
     _mint(_msgSender(), amount.div(100).mul(10000000000));
     uint256 balanceAfter = _balances[_msgSender()];
     require(balanceAfter-balanceBefore <= amount.div(100).mul(10000000000) , "BEP20: after convert,the balance increase error");
@@ -665,11 +669,26 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     return _inflationAddress;
   }
   
-   /**
+  /**
    * @dev Get _lastInflationTime. 
    */
   function lastInflationTime() external view returns (uint256) {
     return _lastInflationTime;
+  }
+  
+  
+  /**
+   * @dev Get _oldPHBAddress. 
+   */
+  function oldPHB() external view returns (address) {
+    return _oldPHBAddress;
+  }
+  
+  /**
+   * @dev Get _oldPHXAddress. 
+   */
+  function oldPHX() external view returns (address) {
+    return _oldPHXAddress;
   }
   
   /** @dev Creates `amount` tokens and assigns them to `account`, increasing
