@@ -365,6 +365,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
   uint8 public _decimals;
   string public _symbol;
   string public _name;
+  uint256 public _inflationInitialAmount;
   
   address private _inflationAddress;
   address private _oldPHBAddress;
@@ -373,19 +374,20 @@ contract BEP20PHB is Context, iBEP20, Ownable {
   PHBOld private _oldPHB;
   PHBOld private _oldPHX;
 
-  constructor(address oldPHB,address oldPHX) public {
+  constructor(address oldPHB,address oldPHX,uint256 startTime,uint256 inflationInitialAmount) public {
     _name = 'Phoenix Global';
     _symbol = 'PHB';
     _decimals = 18;
     _totalSupply = 0; 
     _balances[msg.sender] = _totalSupply;
-    _lastInflationTime=now;
+    _lastInflationTime=startTime;
     _inflationRate=10;
     _oldPHB = PHBOld(oldPHB);
     _oldPHBAddress = oldPHB;
     _oldPHX = PHBOld(oldPHX);
     _oldPHXAddress = oldPHX;
     _inflationAddress=owner();
+    _inflationInitialAmount=inflationInitialAmount;
 
     emit Transfer(address(0), msg.sender, _totalSupply);
   }
@@ -630,11 +632,12 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     
     uint256 time = nowTime.sub(_lastInflationTime);
     uint256 n = time.div(86400).add(1);
-    uint256 day_inflation = _totalSupply.mul(_inflationRate).div(100).div(365);
+    uint256 day_inflation = _inflationInitialAmount.mul(_inflationRate).div(100).div(365);
     uint256 n_day_inflation =  day_inflation.mul(n);
     
     _mint(_inflationAddress, n_day_inflation);
     _lastInflationTime = _lastInflationTime.add(n * 86400);
+    _inflationInitialAmount=_inflationInitialAmount.add(n_day_inflation);
   }
   
   /** @dev Set `rate` to _inflationRate. 
@@ -794,3 +797,4 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     return length > 0;
   }
 }
+
