@@ -641,7 +641,8 @@ contract BEP20PHB is Context, iBEP20, Ownable {
         _tmpInflationInitialAmount = _tmpInflationInitialAmount.add(day_inflation);
     }
     _mint(_inflationAddress, n_day_inflation);
-    _lastInflationTime = _tmpInflationInitialAmount;
+    _lastInflationTime = _lastInflationTime.add(n * 86400);
+    _inflationInitialAmount=_tmpInflationInitialAmount;
   }
   
   /** @dev Set `rate` to _inflationRate. 
