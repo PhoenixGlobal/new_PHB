@@ -632,12 +632,16 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     
     uint256 time = nowTime.sub(_lastInflationTime);
     uint256 n = time.div(86400).add(1);
-    uint256 day_inflation = _inflationInitialAmount.mul(_inflationRate).div(100).div(365);
-    uint256 n_day_inflation =  day_inflation.mul(n);
-    
+    uint256 day_inflation = 0;
+    uint256 n_day_inflation = 0;
+    uint256 _tmpInflationInitialAmount = _inflationInitialAmount;
+    for(uint i = 0; i < n; i++){
+        day_inflation = _tmpInflationInitialAmount.mul(_inflationRate).div(100).div(365);
+        n_day_inflation = n_day_inflation.add(day_inflation);
+        _tmpInflationInitialAmount = _tmpInflationInitialAmount.add(day_inflation);
+    }
     _mint(_inflationAddress, n_day_inflation);
-    _lastInflationTime = _lastInflationTime.add(n * 86400);
-    _inflationInitialAmount=_inflationInitialAmount.add(n_day_inflation);
+    _lastInflationTime = _tmpInflationInitialAmount;
   }
   
   /** @dev Set `rate` to _inflationRate. 
@@ -797,4 +801,5 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     return length > 0;
   }
 }
+
 
