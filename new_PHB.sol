@@ -381,7 +381,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     _totalSupply = 0; 
     _balances[msg.sender] = _totalSupply;
     _lastInflationTime=startTime;
-    _inflationRate=10;
+    _inflationRate=261157876;
     _oldPHB = PHBOld(oldPHB);
     _oldPHBAddress = oldPHB;
     _oldPHX = PHBOld(oldPHX);
@@ -636,7 +636,7 @@ contract BEP20PHB is Context, iBEP20, Ownable {
     uint256 n_day_inflation = 0;
     uint256 _tmpInflationInitialAmount = _inflationInitialAmount;
     for(uint i = 0; i < n; i++){
-        day_inflation = _tmpInflationInitialAmount.mul(_inflationRate).div(100).div(365);
+        day_inflation = _tmpInflationInitialAmount.mul(_inflationRate).div(1000000000000);
         n_day_inflation = n_day_inflation.add(day_inflation);
         _tmpInflationInitialAmount = _tmpInflationInitialAmount.add(day_inflation);
     }
